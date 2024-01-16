@@ -1,0 +1,48 @@
+# Import required libraries
+from flask import Flask, render_template, request, redirect, url_for
+import sqlite3
+
+# Create a Flask app
+app = Flask(__name__)
+
+# Define a function to create a connection to the database
+def get_db_connection():
+    conn = sqlite3.connect('user_data.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Create a table to store user data
+def create_table():
+    conn = get_db_connection()
+    conn.execute('CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, username TEXT, password TEXT)')
+    conn.close()
+
+# Route for the home page
+@app.route('/')
+def home():
+    return render_template('login.html')
+
+# Route for handling the login form submission
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+    
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE username = ? AND password = ?', (username, password)).fetchone()
+    conn.close()
+    
+    if user:
+        # Redirect to a dashboard or some other page upon successful login
+        return redirect(url_for('dashboard'))
+    else:
+        return 'Invalid username or password'
+
+# Route for the dashboard page (just a placeholder)
+@app.route('/dashboard')
+def dashboard():
+    return 'Welcome to the dashboard!'
+
+if __name__ == '__main__':
+    create_table()  # Ensure the database table exists before running the app
+    app.run(debug=True)
